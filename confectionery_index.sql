@@ -1,338 +1,3 @@
-drop schema public cascade;
-create schema public;
-
-create table confectioneries
-(
-	confectionery_id serial not null primary key,
-    address varchar(100) not null
-);
-
-create table confectioners
-(
-	confectioner_id serial not null primary key,
-    "name" varchar(100) not null,
-    confectionery_id int not null,
-	
-    foreign key(confectionery_id)
-		references confectioneries (confectionery_id)
-);
-
-create table couriers
-(
-	courier_id serial not null primary key,
-    "name" varchar(100) not null,
-    phone_number char(20) not null,
-    confectionery_id int not null,
-	
-    foreign key(confectionery_id)
-		references confectioneries (confectionery_id)
-);
-
-create table customers
-(
-	customer_id serial not null primary key,
-    "name" varchar(100) not null,
-    phone_number char(20) not null
-);
-
-create table internal_components
-(
-	internal_components_id serial not null primary key,
-    "name" varchar(100) not null,
-    price float not null
-);
-
-create table creams
-(
-	cream_id int not null primary key,
-    taste varchar(100) not null,
-    color varchar(100) not null,
-	
-    foreign key (cream_id)
-		references internal_components (internal_components_id)
-);
-
-create table fillings
-(
-	filling_id int not null primary key,
-	taste varchar(100) not null,
-	
-    foreign key (filling_id)
-		references internal_components (internal_components_id)
-);
-
-create table decors
-(
-	decor_id int not null primary key,
-    "type" varchar(100) not null,
-    "size" varchar(100) not null,
-    form varchar(100) not null,
-	
-    foreign key (decor_id)
-		references internal_components (internal_components_id)
-);
-
-create table baking_forms
-(
-	baking_form_id serial not null primary key,
-    "name" varchar(100) not null
-);
-
-create table discounts
-(
-	discount_id serial not null primary key,
-    start_date timestamp,
-    expiration_date timestamp,
-	discount_size float null
-);
-
-create table packages
-(
-	package_id serial not null primary key,
-    "type" varchar(100) not null,
-    price float not null 
-);
-
-create table "orders"
-(
-	order_id serial not null primary key,
-    date_of_receipt_of_the_order timestamp not null,
-    delivery_address varchar(100) not null,
-	confectioner_id int not null,
-    courier_id int not null,
-    customer_id int not null,
-    discount_id int,
-    package_id int,
-    
-	foreign key (confectioner_id)
-		references confectioners (confectioner_id),
-	foreign key (courier_id)
-		references couriers (courier_id),
-	foreign key (customer_id)
-		references customers (customer_id),
-	foreign key (package_id) 
-		references packages (package_id),
-	foreign key (discount_id) 
-		references discounts (discount_id)
-);
-
-create table product_categories
-(
-	product_category_id serial not null primary key,
-    "name" varchar(100) not null,
-    "size" varchar(100) not null,
-    price float not null ,
-    baking_form_id int not null,
-	
-    foreign key (baking_form_id)
-		references baking_forms (baking_form_id)
-);
-
-create table product_categories_internal_components
-(
-	product_category_id int not null,
-    internal_components_id int not null,
-    number_of_product_category_internal_components int not null,
-	
-    foreign key (product_category_id)
-		references product_categories (product_category_id),
-	foreign key (internal_components_id)
-		references internal_components (internal_components_id),
-        
-	primary key(product_category_id, internal_components_id)
-);
-
-create table orders_product_categories
-(
-	order_id int not null,
-	product_category_id int not null,
-    number_of_order_product_category int not null,
-    
-    foreign key (product_category_id)
-		references product_categories (product_category_id),
-	foreign key (order_id)
-		references "orders" (order_id),
-        
-	primary key (order_id, product_category_id)
-);
-/*
-insert into confectioneries (address)
-values
-('ул. Зеленая, 15'),
-('ул. Мира, 16'),
-('ул. Краснознаменская, 4'),
-('ул. Ленина, 48'),
-('ул. Баумана, 6'),
-('ул. Еременко, 55'),
-('ул. Короткая, 15'),
-('ул. Никольская, 34'),
-('ул. Центральная, 13'),
-('ул. Школьная, 6');
-
-insert into confectioners ("name", confectionery_ID)
-values
-('Федорова Елена Владимировна', 1),
-('Морозова Ольга Сергеевна', 2),
-('Белякова Ярослава Юрьевна', 3),
-('Вишнякова Валерия Дмитриевна', 4),
-('Панова Николь Романовна', 5),
-('Орехов Марк Анатольевич ', 5),
-('Панфилов Артем Станиславович', 4),
-('Лебедев Игорь Петрович', 3),
-('Крюков Евгений Андреевич', 2),
-('Ефимов Вячеслав Григорьевич', 1);
-
-insert into couriers ("name", phone_number, confectionery_ID)
-values
-('Русаков Алексей Геннадьевич', '89615304070', 1),
-('Селиверстов Денис Семенович','89615304071', 2),
-('Кондратьев Клим Николаевич','89615304072', 3),
-('Артемьев Всеволод Степанович','89615304073', 4),
-('Власов Станислав Миронович','89615304074', 5),
-('Красильников Игорь Дмитриевич','89615304075', 5),
-('Николаев Ефрем Егорович','89615304076', 4),
-('Прохоркин Арсений Климович','89615304077', 3),
-('Романов Егор Антонович','89615304078', 2),
-('Зимин Леонид Сергеевич','89615304079', 1);
-
-insert into customers ("name", phone_number)
-values
-('Михайлов Сергей Николаевич', '89023408789'),
-('Гришин Давид Валентинович','89023408788'),
-('Соколова Алиса Витальевна','89023408787'),
-('Зуева Марта Владимировна','89023408786'),
-('Бирюкова Елизавета Валерьевна','89023408785'),
-('Кузьмина Алия Михайловна','89023408784'),
-('Михеев Юрий Вячеславович','89023408783'),
-('Ильина Мия Артемовна','89023408782'),
-('Селезнева Вероника Юрьевна','89023408781'),
-('Максимов Савелий Иванович','89023408780');
-
-insert into internal_components ("name", price)
-values
-('крем "Тирамиссу"', 150),
-('начинка "Лесные ягоды"', 100),
-('крем-чиз', 200),
-('декор "Цветы из яблок"', 100),
-('начинка "Маршмеллоу"', 100),
-('декор "Щенячий патруль"', 250),
-('крем "Пломбир"', 150),
-('крем "Розовые облака"', 100),
-('начинка "Шоколадная"', 100),
-('декор "Холодное сердце"', 250);
-
-insert into creams (cream_ID, color, taste)
-values
-(1,'коричневый', 'шоколадный'),
-(3,'белый', 'сливочный'),
-(7,'голубой', 'сливочно-молочный'),
-(8,'розовый', 'клубничный');
-
-insert into fillings (filling_ID, taste)
-values
-(2, 'ягодный'),
-(5, 'зефирный'),
-(9, 'шоколадный');
-
-insert into decors (decor_ID, "type", "size", form)
-values
-(4, 'фрукты', 'большой', 'цветы'),
-(6, 'фигурки из мастики', 'средний', 'персонажи из мультика'),
-(10, 'вафельная картинка', 'средний', 'персонажи из мультика');
-
-insert into baking_forms (name)
-values
-('круглая'),
-('квадратная'),
-('сердечко'),
-('книга'),
-('произвольная форма');
-
-insert into discounts (start_date, expiration_date, discount_size)
-values
-('01.01.2020', '31.12.2021', 0.10),
-('01.03.2021', '10.03.2021', 0.20),
-('22.02.2021', '24.02.2021', 0.20),
-('01.01.2022', NULL, 0.50),
-('11.07.2020', '31.12.2020', 0.30),
-('21.03.2021', '10.04.2021', 0.15),
-('30.06.2017', '24.07.2017', 0.05),
-('08.12.2021', '10.12.2021', 0.45),
-('10.10.2019', NULL, 0.10),
-('15.02.2018', '15.03.2018', NULL);
-*/
-insert into packages ("type", price)
-values
-('Праздничная', 200),
-('Обычная', 100),
-('Свадебная', 500),
-('Мужская', 150),
-('Женская', 150),
-('Новогодняя', 200),
-('День Рождения', 200),
-('14 февраля', 200),
-('Прозрачная', 50),
-('Детская', 150);
-/*
-insert into orders (date_of_receipt_of_the_order, delivery_address, confectioner_ID, courier_ID, customer_ID, package_ID, discount_ID)
-values 
-('24.03.21 10:30','ул. Краснополянская, 51-12', 1, 1, 1, 3, 5),
-('15.12.22 14:40','ул. Ленина, 4-78', 2, 2, 2, 1, 5),
-('04.02.20 15:30','ул. Гвардейская, 34-11', 3, 3, 3, 4, 1),
-('30.03.21 10:00','ул. Дмитровская, 1-42', 4, 4, 4, NULL, 2),
-('13.06.20 17:30','ул. Мира, 14-48', 5, 5, 5, 3, 4),
-('14.11.22 11:00','ул. Репина, 18-9', 5, 5, 5, 2, NULL),
-('25.03.21 18:30','ул. Зорге, 3-98', 4, 4, 4, 10, 1),
-('20.10.21 20:00','ул. Демидова, 11', 3, 3, 3, 1, 5),
-('30.12.21 21:00','ул. Сочинская, 33', 2, 2, 2, 6, NULL),
-('05.11.22 11:00','ул. Донская, 48', 1, 1, 1, 7, 5);
-
-insert into product_categories ("name", "size", price, baking_form_ID)
-values
-('торт "Тирамиссу"', 'маленький', 600, 1),
-('торт "Бисквит"', 'средний', 800, 1),
-('торт "Медовик"', 'маленький', 400, 2),
-('торт "Наполеон"', 'большой', 1000, 3),
-('пирог', 'средний', 400, 1),
-('капкейк "Клубничный"', 'средний', 120, 1),
-('пирог', 'маленький', 200, 2),
-('пирог', 'большой', 500, 1),
-('капкейк "Шоколадный"', 'средний', 120, 1),
-('торт "Творожный"', 'маленький', 500, 2);
-
-insert into product_categories_internal_components (product_category_id, internal_components_id, number_of_product_category_internal_components)
-values
-(1, 1, 2),
-(2, 3, 1), 
-(2, 10, 1),
-(3, 7, 1),
-(4, 8, 1),
-(4, 9, 1),
-(5, 2, 1),
-(5, 4, 1),
-(5, 9, 1),
-(6, 8, 12),
-(6, 5, 12),
-(7, 2, 2),
-(8, 9, 1),
-(9, 6, 9),
-(9, 3, 9),
-(10, 3, 3);
-
-insert into orders_product_categories (order_id, product_category_id, number_of_order_product_category)
-values
-(1, 1, 2),
-(2, 3, 1),
-(3, 3, 1),
-(4, 4, 1),
-(5, 5, 3),
-(6, 6, 12),
-(7, 3, 2),
-(8, 8, 1),
-(9, 9, 9),
-(10, 10, 3);
-*/
-
 COPY confectioneries (address)
 FROM 'C:\confectioneries.csv'
 DELIMITER ';'
@@ -478,7 +143,7 @@ SELECT discounts.discount_size AS discount, COUNT(discounts.discount_size) AS "c
 JOIN discounts ON orders.discount_id=discounts.discount_id GROUP BY discounts.discount_size ORDER BY "count" DESC LIMIT 1;
 
 
-/* Представления */
+/* Представления */ 
 --Выводит список текущих заказов по адресу Vine Hill
 CREATE VIEW current_order
 AS
@@ -525,9 +190,9 @@ ORDER BY date_of_receipt_of_the_order;
 
 SELECT * FROM report;
 
-
 /* Триггеры */
-/*create table confectioneries
+/*
+create table confectioneries
 (
 	confectionery_id serial not null primary key,
     address varchar(100) not null
@@ -609,3 +274,128 @@ CREATE PROCEDURE prod_categ (b varchar(60))
 
 call prod_categ('Portland');
 
+/* Функции */
+--Выдать тип внутреннего компонента
+CREATE OR REPLACE FUNCTION item_type(internal_components_id int) RETURNS varchar(20) AS $$
+DECLARE "type" varchar(30);
+
+BEGIN
+	if internal_components_id > 6666 then
+		"type" :='начинка';
+	elseif internal_components_id < 3334 then
+		"type" :='крем';
+	elseif internal_components_id >= 3334 AND internal_components_id <= 6666 then
+		"type" :='декор';
+	end if;
+    
+	return(type);
+END;
+$$ LANGUAGE plpgsql;
+
+SELECT internal_components_id, internal_components.name AS "name", item_type(internal_components_id) as "type", price 
+FROM internal_components
+LEFT JOIN creams ON creams.cream_id=internal_components.internal_components_id
+LEFT JOIN fillings ON fillings.filling_id=internal_components.internal_components_id
+LEFT JOIN decors ON decors.decor_id=internal_components.internal_components_id;
+
+--Определяет тип заказа: масштабный или обычный (по количеству изделий в заказе)
+CREATE OR REPLACE FUNCTION count_type("count" int) RETURNS varchar(60) AS $$
+DECLARE "type" varchar(60);
+
+BEGIN
+	if "count" < 5 then
+		"type" :='обычный';
+	elseif "count" > 5 then
+		"type" :='масштабный';
+	end if;
+    
+	return(type);
+END;
+$$ LANGUAGE plpgsql;
+
+SELECT orders.date_of_receipt_of_the_order, number_of_order_product_category AS "count", count_type(number_of_order_product_category)
+FROM orders_product_categories
+JOIN orders ON orders.order_id=orders_product_categories.order_id;
+
+--Увеличить цену в зависимости от ее величины
+CREATE OR REPLACE FUNCTION new_price(price float) RETURNS float AS $$
+BEGIN
+	if price >= 200 then
+		return price + 50;
+	elseif price < 200 then
+		return price + 100;
+	end if;
+END;
+$$ LANGUAGE plpgsql;
+
+SELECT packages.type AS "name", packages.price AS "old_price", new_price(price) as "new_price" 
+FROM packages;
+
+/* Модификация */
+create index ind_size ON product_categories ("size");
+--1. Индексы. Вывести все категории продуктов с заданными диапазоном цен и размеров
+EXPLAIN (format json)
+SELECT product_categories.name AS product_category, "size", baking_forms.name AS baking_form, price
+FROM product_categories
+JOIN baking_forms ON product_categories.baking_form_id=baking_forms.baking_form_id
+WHERE (price BETWEEN 150 AND 300) AND ("size" = 'M')
+ORDER BY price;
+
+--2. Процедуры и функции. написать процедуру (передаем id заказчика, а через 2 out параметра возвращаем количество заказов и их сумму )
+CREATE VIEW report_customers
+AS
+SELECT customer, count_order, SUM(summa) FROM
+(SELECT customers.customer_id AS customer, COUNT(orders.customer_id) AS count_order,
+SUM(((number_of_order_product_category * product_categories.price) + (number_of_product_category_internal_components * internal_components.price) + packages.price) * (1 - discount_size)) AS summa
+FROM orders_product_categories
+JOIN orders ON orders.order_id=orders_product_categories.order_id
+JOIN product_categories ON product_categories.product_category_id=orders_product_categories.product_category_id
+JOIN product_categories_internal_components ON orders_product_categories.product_category_id=product_categories_internal_components.product_category_id
+JOIN internal_components ON internal_components.internal_components_id=product_categories_internal_components.internal_components_id
+JOIN discounts ON orders.discount_id=discounts.discount_id
+JOIN packages ON orders.package_id=packages.package_id
+JOIN customers ON orders.customer_id=customers.customer_id
+GROUP BY customers.customer_id) AS customer_orders
+GROUP BY customer, count_order;
+
+select * from report_customers;
+
+CREATE OR REPLACE FUNCTION customer_order (customer_id int) RETURNS table (order_count bigint, order_sum float) AS $$
+BEGIN
+	RETURN query
+	SELECT count_order, "sum" FROM report_customers WHERE report_customers.customer = customer_id;
+END;
+$$ LANGUAGE plpgsql;
+
+SELECT * FROM customer_order(196);
+
+--3. Триггеры. При добавлении продукта определенной категории (свадебный торт) в заказ, менять тип упаковки на соответствующий(свадебная)
+CREATE OR REPLACE FUNCTION update_package()
+  RETURNS TRIGGER 
+  LANGUAGE PLPGSQL
+  AS
+$$
+DECLARE product_name varchar(100);
+BEGIN
+	SELECT "name" INTO product_name FROM product_categories WHERE product_category_id = NEW.product_category_id;
+	IF product_name = 'Miami' THEN
+		UPDATE orders SET package_id = 3 WHERE orders.order_id = NEW.order_id ;
+	END IF;
+
+	RETURN NEW;
+END;
+$$;
+
+CREATE TRIGGER packages_changes
+  BEFORE INSERT OR UPDATE
+  ON orders_product_categories
+  FOR EACH ROW
+  EXECUTE PROCEDURE update_package();
+
+select * from orders WHERE order_id = 4;
+
+insert into orders_product_categories (order_id, product_category_id, number_of_order_product_category)
+values
+(4, 8, 2);
+
+select * from orders WHERE order_id = 4;
